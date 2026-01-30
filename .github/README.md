@@ -9,7 +9,7 @@ It tries to mimic vanilla (modern **and** pre-1.9) PvP as good as possible, whil
 Not only does MinestomPvP provide combat mechanics, it also provides several related features (e.g., status effects and food).
 You can easily declare which features you want to use.
 
-The project is published on [maven central](https://central.sonatype.com/artifact/io.github.togar2/MinestomPvP/).
+This fork aims to fix some of MinestomPvP's shortcomings. This is mainly a personal project, and thus will be kept on 1.21.10 until deemed no longer necessary.
 
 ## Table of Contents
 
@@ -47,13 +47,16 @@ Currently, most vanilla PvP mechanics are supported.
 - TNT
 - Respawn anchors (explosion only)
 
-## Plans
+## Fork Plans
 
 - Lingering potions
+- Tipped arrow rework
+- Splash potion rework
 - Fireworks (for crossbows)
 - Support for (some) water mechanics (e.g. slowing projectiles down)
 - 1.21 features (the library is already 1.21 compatible, just doesn't support its combat features)
 - Rework of the tool & armor registry to allow for customization
+- 1.8.9 combat rework
 
 ## Usage
 
