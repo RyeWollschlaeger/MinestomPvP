@@ -76,13 +76,13 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 
     @Override
     public void init(EventNode<@NotNull EntityInstanceEvent> node) {
-
         // Player Loading the crossbow
         node.addListener(PlayerBeginItemUseEvent.class, event -> {
             var itemStack = event.getItemStack();
             var player = event.getPlayer();
             if (itemStack.material() != Material.CROSSBOW) return;
-            if (projectileItemFeature.getCrossbowProjectile(player) == null && player.getGameMode() != GameMode.CREATIVE) {
+
+            if (!isCrossbowCharged(itemStack) && projectileItemFeature.getCrossbowProjectile(player) == null && player.getGameMode() != GameMode.CREATIVE) {
                 event.setCancelled(true);
                 return;
             }

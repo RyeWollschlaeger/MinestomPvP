@@ -27,6 +27,10 @@ import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.registry.Registries;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.tag.Tag;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 /**
  * Vanilla implementation of {@link FallFeature}
@@ -38,12 +42,19 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 			FeatureType.PLAYER_STATE
 	);
 	
-	public static final Tag<Double> FALL_DISTANCE = Tag.Transient("fallDistance");
-	public static final Tag<Boolean> EXTRA_FALL_PARTICLES = Tag.Transient("extraFallParticles");
+	public static final Tag<@NotNull Double> FALL_DISTANCE = Tag.Transient("fallDistance");
+	public static final Tag<@NotNull Boolean> EXTRA_FALL_PARTICLES = Tag.Transient("extraFallParticles");
 	
 	private final FeatureConfiguration configuration;
 	
 	private PlayerStateFeature playerStateFeature;
+
+    public static List<Block> WATER_BLOCKS = List.of(
+            Block.WATER,
+            Block.KELP_PLANT,
+            Block.SEAGRASS,
+            Block.TALL_SEAGRASS
+    );
 	
 	public VanillaFallFeature(FeatureConfiguration configuration) {
 		this.configuration = configuration;
@@ -59,7 +70,7 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 	}
 	
 	@Override
-	public void init(EventNode<EntityInstanceEvent> node) {
+	public void init(EventNode<@NotNull EntityInstanceEvent> node) {
 		// For living non-player entities, handle fall damage every tick
 		node.addListener(EntityTickEvent.class, event -> {
 			if (!(event.getEntity() instanceof LivingEntity livingEntity)) return;
@@ -101,10 +112,18 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 			if (dy < 0) entity.setTag(FALL_DISTANCE, fallDistance - dy);
 			return;
 		}
-		
+
 		Point landingPos = getLandingPos(entity, newPos);
 		Block block = entity.getInstance().getBlock(landingPos);
-		
+
+        for (Block waterBlock : WATER_BLOCKS) {
+            if (entity.getInstance().getBlock(newPos).compare(waterBlock)) {
+                entity.setTag(FALL_DISTANCE, 0.0);
+                return;
+            }
+        }
+        LoggerFactory.getLogger(getClass()).info(block.name());
+
 		if (entity.hasTag(EXTRA_FALL_PARTICLES) && entity.getTag(EXTRA_FALL_PARTICLES) && fallDistance > 0.0) {
 			Vec position = Vec.fromPoint(landingPos).apply(Vec.Operator.FLOOR).add(0.5, 1, 0.5);
 			int particleCount = (int) Math.max(0, Math.min(200, 50 * fallDistance));
