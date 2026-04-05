@@ -360,9 +360,7 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
             arrow.setInstance(Objects.requireNonNull(player.getInstance()), position);
 
             arrow.shootFromRotation(position.pitch(), position.yaw(), 0, DEFAULT_POWER, DEFAULT_SPREAD, yaw);
-            Vec playerVel = player.getVelocity();
             arrow.setVelocity(arrow.getVelocity()
-                    .add(playerVel.x(), player.isOnGround() ? 0.0D : playerVel.y(), playerVel.z())
                     .add(getRandomOffset(), getRandomOffset(), getRandomOffset())
             );
 
