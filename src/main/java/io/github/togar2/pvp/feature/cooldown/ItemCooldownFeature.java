@@ -2,7 +2,7 @@ package io.github.togar2.pvp.feature.cooldown;
 
 import io.github.togar2.pvp.feature.CombatFeature;
 import net.minestom.server.entity.Player;
-import net.minestom.server.item.Material;
+import net.minestom.server.item.ItemStack;
 
 /**
  * Combat feature to manage a players item cooldown animation.
@@ -10,15 +10,29 @@ import net.minestom.server.item.Material;
 public interface ItemCooldownFeature extends CombatFeature {
 	ItemCooldownFeature NO_OP = new ItemCooldownFeature() {
 		@Override
-		public boolean hasCooldown(Player player, Material material) {
+		public boolean hasCooldown(Player player, String cooldownGroup) {
 			return false;
 		}
-		
-		@Override
-		public void setCooldown(Player player, Material material, int ticks) {}
-	};
+
+        @Override
+        public boolean hasCooldown(Player player, ItemStack itemStack) {
+            return false;
+        }
+
+        @Override
+		public void setCooldown(Player player, String cooldownGroup, int ticks) {}
+
+        @Override
+        public void setCooldown(Player player, ItemStack itemStack, int ticks) {
+
+        }
+    };
 	
-	boolean hasCooldown(Player player, Material material);
+	boolean hasCooldown(Player player, String cooldownGroup);
+
+    boolean hasCooldown(Player player, ItemStack itemStack);
 	
-	void setCooldown(Player player, Material material, int ticks);
+	void setCooldown(Player player, String cooldownGroup, int ticks);
+
+    void setCooldown(Player player, ItemStack itemStack, int ticks);
 }
