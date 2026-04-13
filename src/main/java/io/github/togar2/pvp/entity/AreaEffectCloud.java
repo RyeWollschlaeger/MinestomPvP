@@ -2,6 +2,7 @@ package io.github.togar2.pvp.entity;
 
 import io.github.togar2.pvp.feature.effect.EffectFeature;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.collision.Aerodynamics;
 import net.minestom.server.color.AlphaColor;
 import net.minestom.server.color.Color;
 import net.minestom.server.entity.Entity;
@@ -32,19 +33,56 @@ public class AreaEffectCloud extends Entity {
 
     private final EffectFeature effectFeature;
 
-    private static final int DEFAULT_DURATION_ON_USE = 0;
-    private static final float DEFAULT_RADIUS_ON_USE = 0.0F;
-    private static final float DEFAULT_RADIUS_PER_TICK = 0.0F;
-    private static final float MINIMAL_RADIUS = 0.5F;
-    private static final float DEFAULT_RADIUS = 3.0F;
-    private static final float MAX_RADIUS = 32.0f;
+    public static final int DEFAULT_DURATION_ON_USE = 0;
+    public static final float DEFAULT_RADIUS_ON_USE = 0.0F;
+    public static final float DEFAULT_RADIUS_PER_TICK = 0.0F;
+    public static final float MINIMAL_RADIUS = 0.5F;
+    public static final float DEFAULT_RADIUS = 3.0F;
+    public static final float MAX_RADIUS = 32.0f;
     public static final int INFINITE_DURATION = -1;
     public static final int DEFAULT_LINGERING_DURATION = 600;
-    private static final int DEFAULT_WAIT_TIME = 20;
-    private static final int DEFAULT_REAPPLICATION_DELAY = 20;
-    private static final Particle.EntityEffect DEFAULT_PARTICLE =
-            new Particle.EntityEffect(Particle.ENTITY_EFFECT.key(),Particle.ENTITY_EFFECT.id(), new AlphaColor(-1));
+    public static final int DEFAULT_WAIT_TIME = 20;
+    public static final int DEFAULT_REAPPLICATION_DELAY = 20;
+    public static final Particle.EntityEffect DEFAULT_PARTICLE = new Particle.EntityEffect(
+            Particle.ENTITY_EFFECT.key(), Particle.ENTITY_EFFECT.id(), new AlphaColor(-1));
 
+    /**
+     *                           Creates an area effect cloud
+     * <p>
+     *                           Note: There are two ways to set the color of the area effect cloud if it uses the
+     *                           {@link net.minestom.server.particle.Particle.EntityEffect} particles:
+     *                           1. Directly in the particle itself:
+     *
+     *                           <pre>{@code
+     *                              new AreaEffectCloud(...,  Particle.ENTITY_EFFECT.withColor(255, new Color(255, 0, 0)), ...)
+     *                           }</pre>
+     *
+     *                           2. In the potionContents parameter:
+     *
+     *                           <pre>{@code
+     *                              new AreaEffectCloud(..., new PotionContents(null, new Color(255, 0, 0), List.of()), ...)
+     *                           }</pre>
+     *
+     *                           Both of these will work, but the direct particle color will override the potionContents
+     *                           color. This is intended behaviour.
+     *
+     * @param duration           How long the area effect cloud will last for before dissipating
+     * @param radius             The radius of the area effect cloud
+     * @param particle           The particle of the area effect cloud
+     * @param radiusPerTick      By how much the radius of the area effect cloud will change every tick
+     * @param radiusOnUse        By how much the radius of the area effect cloud will change whenever it applies a potion
+     *                           effect to an entity
+     * @param reapplicationDelay How many ticks before the area effect cloud can apply its potion effects to the same
+     *                           entity again
+     * @param durationOnUse      By how much the duration of the area effect cloud will change whenever it applies a
+     *                           potion effect to an entity
+     * @param waitTime           How many ticks before the area effect cloud will wait before applying effects. Visually,
+     *                           the area effect cloud will also be tiny
+     * @param potionContents     The {@link PotionContents} of the area effect cloud
+     * @param ownerUuid          The owner/attacker of the area effect cloud. In lingering potions, this is usually the
+     *                           thrower of the potion
+     * @param effectFeature      Dependency
+     */
     public AreaEffectCloud(int duration, float radius, Particle particle, float radiusPerTick, float radiusOnUse, int reapplicationDelay,
                            int durationOnUse, int waitTime, PotionContents potionContents, @Nullable UUID ownerUuid,
                            EffectFeature effectFeature) {
@@ -65,7 +103,12 @@ public class AreaEffectCloud extends Entity {
         this.effectFeature = effectFeature;
 
         this.potionContents = potionContents;
-        updateColor(this.potionContents);
+
+        if (particle instanceof Particle.EntityEffect entityEffect && entityEffect.color().asARGB() == -1)
+            updateColor(this.potionContents);
+
+        this.setNoGravity(true);
+        this.setAerodynamics(new Aerodynamics(0.0, 0.0, 0.0));
     }
 
     public AreaEffectCloud() {
@@ -112,8 +155,8 @@ public class AreaEffectCloud extends Entity {
             instance.getEntityTracker().nearbyEntities(position, meta.getRadius(),
                     EntityTracker.Target.ENTITIES, entity -> {
                         if (get2DDistanceSquared(entity) <= meta.getRadius() * meta.getRadius() &&
-                            entity instanceof LivingEntity livingEntity)
-                                entitiesToAffect.add(livingEntity);
+                                entity instanceof LivingEntity livingEntity)
+                            entitiesToAffect.add(livingEntity);
                     });
 
             entitiesToAffect.forEach(entity -> {
@@ -126,7 +169,6 @@ public class AreaEffectCloud extends Entity {
                     affectedEntities.put(entity, age + reapplicationDelay);
                 }
             });
-
         }
     }
 
@@ -166,12 +208,19 @@ public class AreaEffectCloud extends Entity {
         return (dx * dx) + (dz * dz);
     }
 
-    private void updateColor(PotionContents potionContents) {
+    public void updateColor(PotionContents potionContents) {
         if (meta.getParticle() instanceof Particle.EntityEffect particle) {
             Color color = new Color(effectFeature.getPotionColor(potionContents));
             meta.setParticle(
                     new Particle.EntityEffect(
                             particle.key(), particle.id(), new AlphaColor(255, color)));
+        }
+    }
+
+    public void updateColor(AlphaColor alphaColor) {
+        if (meta.getParticle() instanceof Particle.EntityEffect particle) {
+            meta.setParticle(new Particle.EntityEffect(
+                    particle.key(), particle.id(), alphaColor));
         }
     }
 }
