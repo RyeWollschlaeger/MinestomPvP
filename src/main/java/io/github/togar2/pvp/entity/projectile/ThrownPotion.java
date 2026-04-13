@@ -64,7 +64,6 @@ public class ThrownPotion extends CustomEntityProjectile implements ItemHoldingP
 			}
 		}
 
-
 		boolean instantEffect = false;
 		for (Potion potion : potions) {
 			if (potion.effect().registry().isInstantaneous()) {
