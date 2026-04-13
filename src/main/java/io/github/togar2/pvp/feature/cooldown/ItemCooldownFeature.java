@@ -26,6 +26,11 @@ public interface ItemCooldownFeature extends CombatFeature {
         public void setCooldown(Player player, ItemStack itemStack, int ticks) {
 
         }
+
+        @Override
+        public void setCooldown(Player player, ItemStack itemStack) {
+
+        }
     };
 	
 	boolean hasCooldown(Player player, String cooldownGroup);
@@ -35,4 +40,6 @@ public interface ItemCooldownFeature extends CombatFeature {
 	void setCooldown(Player player, String cooldownGroup, int ticks);
 
     void setCooldown(Player player, ItemStack itemStack, int ticks);
+
+    void setCooldown(Player player, ItemStack itemStack);
 }

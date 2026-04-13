@@ -103,6 +103,13 @@ public class VanillaItemCooldownFeature implements ItemCooldownFeature, Registra
         setCooldown(player, cooldownGroup, ticks);
     }
 
+    @Override
+    public void setCooldown(Player player, ItemStack itemStack) {
+        UseCooldown useCooldown = itemStack.get(DataComponents.USE_COOLDOWN);
+        int ticks = useCooldown != null ? (int) useCooldown.seconds() * 20 : 0;
+        setCooldown(player, itemStack, ticks);
+    }
+
     protected void sendCooldownPacket(Player player, String cooldownGroup, int ticks) {
 		player.getPlayerConnection().sendPacket(new SetCooldownPacket(cooldownGroup, ticks));
 	}
