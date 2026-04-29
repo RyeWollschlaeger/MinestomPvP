@@ -8,6 +8,7 @@ import net.minestom.server.color.Color;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.LivingEntity;
+import net.minestom.server.entity.Player;
 import net.minestom.server.entity.metadata.other.AreaEffectCloudMeta;
 import net.minestom.server.instance.EntityTracker;
 import net.minestom.server.item.component.PotionContents;
@@ -30,6 +31,7 @@ public class AreaEffectCloud extends Entity {
     private final Map<@NotNull LivingEntity, @NotNull Integer> affectedEntities = new HashMap<>();
     private final UUID ownerUuid;
     private final PotionContents potionContents;
+    private final Set<LivingEntity> entitiesToAffect = new HashSet<>();
 
     private final EffectFeature effectFeature;
 
@@ -151,23 +153,23 @@ public class AreaEffectCloud extends Entity {
                 return;
             }
 
-            Set<LivingEntity> entitiesToAffect = new HashSet<>();
+            entitiesToAffect.clear();
+            float radiusSquared = meta.getRadius() * meta.getRadius();
             instance.getEntityTracker().nearbyEntities(position, meta.getRadius(),
                     EntityTracker.Target.ENTITIES, entity -> {
-                        if (get2DDistanceSquared(entity) <= meta.getRadius() * meta.getRadius() &&
-                                entity instanceof LivingEntity livingEntity)
+                        if (get2DDistanceSquared(entity) <= radiusSquared && entity instanceof LivingEntity livingEntity)
                             entitiesToAffect.add(livingEntity);
                     });
 
-            entitiesToAffect.forEach(entity -> {
-                if (!affectedEntities.containsKey(entity)) {
-                    effectFeature.addLingeringPotionEffects(entity, potionContents, this,
-                            MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(ownerUuid));
+            Player attacker = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(ownerUuid);
 
-                    changeRadiusOnUse();
-                    changeDurationOnUse();
-                    affectedEntities.put(entity, age + reapplicationDelay);
-                }
+            entitiesToAffect.forEach(entity -> {
+                if (affectedEntities.containsKey(entity)) return;
+
+                effectFeature.addLingeringPotionEffects(entity, potionContents, this, attacker);
+                changeRadiusOnUse();
+                changeDurationOnUse();
+                affectedEntities.put(entity, age + reapplicationDelay);
             });
         }
     }
